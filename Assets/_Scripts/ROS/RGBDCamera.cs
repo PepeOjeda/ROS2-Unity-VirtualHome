@@ -1,37 +1,42 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+using System.Threading.Tasks;
 
 using Unity.Robotics.ROSTCPConnector;
-using RosMessageTypes.Sensor;
 using Unity.Robotics.Core;
+using Unity.Robotics.ROSTCPConnector.MessageGeneration;
 
+using RosMessageTypes.Sensor;
+using Header = RosMessageTypes.Std.HeaderMsg;
 using ImageMsg = RosMessageTypes.Sensor.ImageMsg;
-using System.Linq;
 using System;
-using System.Threading.Tasks;
 
 [RequireComponent(typeof(Camera))]
 public class RGBDCamera : MonoBehaviour
 {
     public string colorTopic = "/rgbd/color/raw";
     public string depthTopic = "/rgbd/depth/raw";
-    public RenderTexture customRenderTexture;
+    public string infoTopic = "/rgbd/info";
+    public RenderTexture colorRT;
+    public RenderTexture depthRT;
     public Material depthMat;
     public float frequency = 30;
-
 
     CustomTimers.Countdown countdown;
 
     private ROSConnection ros;
-    private Texture2D image;
+    private Texture2D colorImage;
+    private Texture2D depthImage;
+    Camera _camera;
 
     void Start()
     {
         ros = ROSConnection.GetOrCreateInstance();
         ros.RegisterPublisher<ImageMsg>(colorTopic, 1);
         ros.RegisterPublisher<ImageMsg>(depthTopic, 1);
+        ros.RegisterPublisher<CameraInfoMsg>(infoTopic, 1);
         countdown = new(1 / frequency);
+        _camera = GetComponent<Camera>();
     }
 
     void OnRenderImage(RenderTexture src, RenderTexture dest)
@@ -39,50 +44,75 @@ public class RGBDCamera : MonoBehaviour
         if (!countdown.done)
             return;
 
-        publishColor(src);
-        publishDepth(src);
+
+        Header header = new(new TimeStamp(Clock.time), gameObject.name);
+        publishInfo(header);
+        publishColor(src, header);
+        publishDepth(src, header);
         countdown.Restart();
     }
 
-    void publishColor(RenderTexture src)
+    void publishInfo(Header header)
+    {
+        var msg = CameraInfoGenerator.ConstructCameraInfoMessage(_camera, header);
+        ros.Publish(infoTopic, msg);
+    }
+
+    void publishColor(RenderTexture src, Header header)
     {
         //vertical flip on gpu
-        Graphics.Blit(src, customRenderTexture, new Vector2(1, -1), new Vector2(0, 1));
-        ImageMsg msg = ReadImage();
+        Graphics.Blit(src, colorRT, new Vector2(1, -1), new Vector2(0, 1));
+        //Graphics.Blit(src, colorRT, new Vector2(1, 1), new Vector2(0, 0));
+        ImageMsg msg = ReadImage(header, colorRT, TextureFormat.RGB24, ref colorImage);
         ros.Publish(colorTopic, msg);
     }
 
-    void publishDepth(RenderTexture src)
+    void publishDepth(RenderTexture src, Header header)
     {
         //read depth buffer (material also does the vertical flip)
-        Graphics.Blit(src, customRenderTexture, depthMat, 0); // the pass index is required! otherwise nothing happens
+        Graphics.Blit(src, depthRT, depthMat, 0); // the pass index is required! otherwise nothing happens
 
-        ImageMsg msg = ReadImage();
+        ImageMsg msg = ReadImage(header, depthRT, TextureFormat.R16, ref depthImage);
         ros.Publish(depthTopic, msg);
     }
 
-    ImageMsg ReadImage()
+    ImageMsg ReadImage(Header header, RenderTexture renderTexture, TextureFormat format, ref Texture2D image)
     {
         //read render texture (gpu) to Texture2D (cpu)  
-        RenderTexture.active = customRenderTexture;
+        RenderTexture.active = renderTexture;
         if (!image)
-            image = new Texture2D(customRenderTexture.width, customRenderTexture.height, TextureFormat.RGB24, false);
-        image.ReadPixels(new Rect(0, 0, customRenderTexture.width, customRenderTexture.height), 0, 0);
+            image = new Texture2D(renderTexture.width, renderTexture.height, format, false);
+        image.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
         image.Apply();
         RenderTexture.active = null;
 
         //compressed
-        //ImageMsg msg = new(
-        //	new RosMessageTypes.Std.HeaderMsg(new TimeStamp(Clock.time), gameObject.name),
+        //ImageMsg msg = new(header,
         //	"png",
         //	image.EncodeToPNG());
 
+        string encodingStr="";
+        uint step = 0;
+        switch(format)
+        {
+            case TextureFormat.RGB24:
+                encodingStr = "rgb8";
+                step=(uint)image.width * 3;
+                break;
+            case TextureFormat.R16:
+                encodingStr = "mono16";
+                step=(uint)image.width * 2;
+                break;
+            default:
+                Debug.LogError($"Texture format {format} unsupported!");
+                throw new Exception();
+        }
+
         //raw
-        ImageMsg msg = new(
-            new RosMessageTypes.Std.HeaderMsg(new TimeStamp(Clock.time), gameObject.name),
-            (uint)image.height, (uint)image.width, "rgb8", (byte)1, (uint)image.width * 3,
+        ImageMsg msg = new(header,
+            (uint)image.height, (uint)image.width, encodingStr, (byte)1, step,
             image.GetRawTextureData().ToArray());
-        
+
         return msg;
     }
     void FlipVerticallyCPU(Texture2D image)
