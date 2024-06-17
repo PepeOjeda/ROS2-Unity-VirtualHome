@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16f5a1f89789d3743a9a125b62cafc4d, type: 3}
+  m_Name: pepe_options
+  m_EditorClassIdentifier: 
+  houseSelected: 1
+  path: Assets/Records
+  SunRotation: 100
+  StateGeneralLight: 0
+  StateLights: 0
+  RandomStateDoor: 3
+  WallsMaterialsByRoomType:
+  - roomType: 8
+    materials:
+    - {fileID: 2100000, guid: deb94f06304cfbd47a7158885278779b, type: 2}
+  - roomType: 3
+    materials:
+    - {fileID: 2100000, guid: f00b33b6b91f057429b09ca6cc7abc05, type: 2}
+  - roomType: 2
+    materials:
+    - {fileID: 2100000, guid: f00b33b6b91f057429b09ca6cc7abc05, type: 2}
+  FloorsMaterialsByRoomType: []
+  specifySeedByObjectType: []
+  userPrefab: {fileID: 0}
+  agentsToInstantiate: []
+  simulationLog: {fileID: 0}
