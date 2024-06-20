@@ -3,12 +3,21 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - ROSListener
+  - robot
+  - VirtualObject
+  - Wall
+  - Burner
+  - Oven
+  - KitchenFurniture
+  - Sink
+  - Washbasin
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Robot
   - Water
   - UI
   - 
