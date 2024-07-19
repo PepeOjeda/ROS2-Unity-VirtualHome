@@ -63,8 +63,7 @@ LightmapSettings:
     m_CompAOExponentDirect: 0
     m_ExtractAmbientOcclusion: 0
     m_Padding: 2
-    m_LightmapParameters: {fileID: 15200, guid: 0000000000000000f000000000000000,
-      type: 0}
+    m_LightmapParameters: {fileID: 15200, guid: 0000000000000000f000000000000000, type: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
     m_FinalGather: 0
@@ -97,8 +96,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000000, guid: b9cf2ee16efdc4242891aa03ebc4b82f,
-    type: 2}
+  m_LightingDataAsset: {fileID: 112000000, guid: b9cf2ee16efdc4242891aa03ebc4b82f, type: 2}
   m_LightingSettings: {fileID: 1448122530}
 --- !u!196 &4
 NavMeshSettings:
@@ -157,8 +155,8 @@ MonoBehaviour:
   LogLevel: 1
   recordEnvironmentDatas: 0
   transparentRoof: 1
-  m_simulationOptions: {fileID: 11400000, guid: da101c6227f95f40399118dd82c6cce7,
-    type: 2}
+  m_simulationOptions: {fileID: 11400000, guid: da101c6227f95f40399118dd82c6cce7, type: 2}
+  root: {fileID: 0}
   houses:
   - {fileID: 5591509399737963863, guid: b500168d03a878741afa66af528f124d, type: 3}
   - {fileID: 2505263735248533966, guid: 78cfc527f8044a94f8fb4af17a7594a1, type: 3}
@@ -233,7 +231,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.06666667
+  m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: ecfbbd49b01a1214387036d3b903fa72, type: 2}
   m_BuildHeightMesh: 0
