@@ -4,9 +4,6 @@
     "m_ObjectId": "a24eb60b11204af6a5f99ad51c344cc3",
     "m_Properties": [
         {
-            "m_Id": "f2eec1f38ddd4b30bc7e055901edb81e"
-        },
-        {
             "m_Id": "11cbd3b3ae594d14ab8f83a677ca05b9"
         },
         {
@@ -52,9 +49,6 @@
             "m_Id": "6fe1806e0967497b9c01f74af8e205f5"
         },
         {
-            "m_Id": "2e8858bb6c86414d961e2663ff2893b1"
-        },
-        {
             "m_Id": "95b207526b0f4092952ab8cb876119a1"
         },
         {
@@ -83,6 +77,9 @@
         },
         {
             "m_Id": "3177a9c0cd60403fbd73eddfcf64a965"
+        },
+        {
+            "m_Id": "2cd0aa009a214b4a92f956ffd3f88830"
         }
     ],
     "m_GroupDatas": [
@@ -91,6 +88,18 @@
         },
         {
             "m_Id": "84d706cd36b942cc8eba8d6a6cd801b6"
+        },
+        {
+            "m_Id": "19572ab5f683462ca4edef0739e04214"
+        },
+        {
+            "m_Id": "0fa792e568894e8b9b1ce739ad867d3d"
+        },
+        {
+            "m_Id": "b14e76914111417b902b6440ca8f0264"
+        },
+        {
+            "m_Id": "5945e0f487664d80b83c3041a554bf84"
         }
     ],
     "m_StickyNoteDatas": [],
@@ -126,7 +135,7 @@
         {
             "m_OutputSlot": {
                 "m_Node": {
-                    "m_Id": "2e8858bb6c86414d961e2663ff2893b1"
+                    "m_Id": "2cd0aa009a214b4a92f956ffd3f88830"
                 },
                 "m_SlotId": 0
             },
@@ -445,6 +454,17 @@
 }
 
 {
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "0fa792e568894e8b9b1ce739ad867d3d",
+    "m_Title": "The scenedepth node gives meters, but when we output it from the shader it is interpreted as a color. Meaning that 1.0 is the maximum. ",
+    "m_Position": {
+        "x": -857.572509765625,
+        "y": 612.1837768554688
+    }
+}
+
+{
     "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
     "m_ObjectId": "11cbd3b3ae594d14ab8f83a677ca05b9",
@@ -489,6 +509,32 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "18c0d124772949e7b9affd53cf77499c",
+    "m_Id": 0,
+    "m_DisplayName": "Out",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "19572ab5f683462ca4edef0739e04214",
+    "m_Title": "(2^16-1) / 1000",
+    "m_Position": {
+        "x": 38.67431640625,
+        "y": 413.57611083984377
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.DivideNode",
     "m_ObjectId": "2070ec6cff0f48428eaceab5b5dd53b7",
     "m_Group": {
@@ -499,9 +545,9 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 121.99999237060547,
-            "y": 243.99996948242188,
-            "width": 125.99996185302735,
+            "x": 146.0,
+            "y": 266.0,
+            "width": 126.0,
             "height": 118.0
         }
     },
@@ -541,8 +587,8 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -308.0,
-            "y": 303.0,
+            "x": -263.0,
+            "y": 293.0,
             "width": 145.0,
             "height": 112.0
         }
@@ -651,28 +697,37 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
-    "m_ObjectId": "2e8858bb6c86414d961e2663ff2893b1",
+    "m_Type": "UnityEditor.ShaderGraph.Vector1Node",
+    "m_ObjectId": "2cd0aa009a214b4a92f956ffd3f88830",
     "m_Group": {
-        "m_Id": ""
+        "m_Id": "19572ab5f683462ca4edef0739e04214"
     },
-    "m_Name": "Property",
+    "m_Name": "Float",
     "m_DrawState": {
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -52.00001525878906,
-            "y": 340.0000305175781,
-            "width": 162.00009155273438,
-            "height": 34.000030517578128
+            "x": 64.0,
+            "y": 473.0,
+            "width": 126.0,
+            "height": 77.0
         }
     },
     "m_Slots": [
         {
-            "m_Id": "526c5b2026a74a63ae89292a76e526bb"
+            "m_Id": "527d5b8848b74bbb94eab9fff616aa2a"
+        },
+        {
+            "m_Id": "18c0d124772949e7b9affd53cf77499c"
         }
     ],
-    "synonyms": [],
+    "synonyms": [
+        "Vector 1",
+        "1",
+        "v1",
+        "vec1",
+        "scalar"
+    ],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
     "m_DismissedVersion": 0,
@@ -680,9 +735,7 @@
     "m_CustomColors": {
         "m_SerializableColors": []
     },
-    "m_Property": {
-        "m_Id": "f2eec1f38ddd4b30bc7e055901edb81e"
-    }
+    "m_Value": 0.0
 }
 
 {
@@ -985,16 +1038,27 @@
 {
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "526c5b2026a74a63ae89292a76e526bb",
-    "m_Id": 0,
-    "m_DisplayName": "MaxDepthRange",
-    "m_SlotType": 1,
+    "m_ObjectId": "527d5b8848b74bbb94eab9fff616aa2a",
+    "m_Id": 1,
+    "m_DisplayName": "X",
+    "m_SlotType": 0,
     "m_Hidden": false,
-    "m_ShaderOutputName": "Out",
+    "m_ShaderOutputName": "X",
     "m_StageCapability": 3,
-    "m_Value": 0.0,
+    "m_Value": 65.53500366210938,
     "m_DefaultValue": 0.0,
     "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "5945e0f487664d80b83c3041a554bf84",
+    "m_Title": "So, 1m becomes 65535. Thus, to get millimeters we can divide by 65535/1000. That means the color we actually output from the shader is 1/65.535, but that will get turned into 1000 (float precission permitting) by unity when writing to the texture",
+    "m_Position": {
+        "x": -853.9730224609375,
+        "y": 790.1348876953125
+    }
 }
 
 {
@@ -1048,10 +1112,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -95.0,
-            "y": 222.0,
-            "width": 208.0,
-            "height": 302.0
+            "x": -34.0,
+            "y": 266.0,
+            "width": 126.0,
+            "height": 118.0
         }
     },
     "m_Slots": [
@@ -1701,9 +1765,6 @@
     "m_Name": "",
     "m_ChildObjectList": [
         {
-            "m_Id": "f2eec1f38ddd4b30bc7e055901edb81e"
-        },
-        {
             "m_Id": "11cbd3b3ae594d14ab8f83a677ca05b9"
         },
         {
@@ -1909,6 +1970,17 @@
     "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "b14e76914111417b902b6440ca8f0264",
+    "m_Title": "However, it is written to a uint16 texture, so 1.0 is actually written as 65535",
+    "m_Position": {
+        "x": -857.635009765625,
+        "y": 701.1433715820313
     }
 }
 
@@ -2314,34 +2386,6 @@
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
     "m_Labels": []
-}
-
-{
-    "m_SGVersion": 1,
-    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
-    "m_ObjectId": "f2eec1f38ddd4b30bc7e055901edb81e",
-    "m_Guid": {
-        "m_GuidSerialized": "605efcad-6555-4d4d-903b-671c6d11c33c"
-    },
-    "m_Name": "MaxDepthRange",
-    "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "MaxDepthRange",
-    "m_DefaultReferenceName": "_MaxDepthRange",
-    "m_OverrideReferenceName": "",
-    "m_GeneratePropertyBlock": true,
-    "m_UseCustomSlotLabel": false,
-    "m_CustomSlotLabel": "",
-    "m_DismissedVersion": 0,
-    "m_Precision": 0,
-    "overrideHLSLDeclaration": false,
-    "hlslDeclarationOverride": 0,
-    "m_Hidden": false,
-    "m_Value": 4.0,
-    "m_FloatType": 0,
-    "m_RangeValues": {
-        "x": 0.0,
-        "y": 1.0
-    }
 }
 
 {
