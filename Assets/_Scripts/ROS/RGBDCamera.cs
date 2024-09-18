@@ -110,7 +110,7 @@ public class RGBDCamera : MonoBehaviour
 
         //raw
         ImageMsg msg = new(header,
-            (uint)image.height, (uint)image.width, encodingStr, (byte)1, step,
+            (uint)image.height, (uint)image.width, encodingStr, (byte)0, step,
             image.GetRawTextureData().ToArray());
 
         return msg;
