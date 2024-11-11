@@ -37,6 +37,9 @@ public class RGBDCamera : MonoBehaviour
         ros.RegisterPublisher<CameraInfoMsg>(infoTopic, 1);
         countdown = new(1 / frequency);
         _camera = GetComponent<Camera>();
+
+        if(_camera.activeTexture.width != colorRT.width || _camera.activeTexture.height != colorRT.height)
+            Debug.LogWarning("The resolutions of the camera target and custom render texture don't match!");
     }
 
     void OnRenderImage(RenderTexture src, RenderTexture dest)
@@ -55,6 +58,8 @@ public class RGBDCamera : MonoBehaviour
     void publishInfo(Header header)
     {
         var msg = CameraInfoGenerator.ConstructCameraInfoMessage(_camera, header);
+        msg.width = (uint)colorRT.width;
+        msg.height = (uint)colorRT.height;
         ros.Publish(infoTopic, msg);
     }
 
