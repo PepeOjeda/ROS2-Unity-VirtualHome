@@ -38,8 +38,6 @@ public class RGBDCamera : MonoBehaviour
         countdown = new(1 / frequency);
         _camera = GetComponent<Camera>();
 
-        if(_camera.activeTexture.width != colorRT.width || _camera.activeTexture.height != colorRT.height)
-            Debug.LogWarning("The resolutions of the camera target and custom render texture don't match!");
     }
 
     void OnRenderImage(RenderTexture src, RenderTexture dest)
@@ -47,6 +45,8 @@ public class RGBDCamera : MonoBehaviour
         if (!countdown.done)
             return;
 
+        if (_camera.activeTexture.width != colorRT.width || _camera.activeTexture.height != colorRT.height)
+            Debug.LogWarning("The resolutions of the camera target and custom render texture don't match!");
 
         Header header = new(new TimeStamp(Clock.time), gameObject.name);
         publishInfo(header);
@@ -96,17 +96,17 @@ public class RGBDCamera : MonoBehaviour
         //	"png",
         //	image.EncodeToPNG());
 
-        string encodingStr="";
+        string encodingStr = "";
         uint step = 0;
-        switch(format)
+        switch (format)
         {
             case TextureFormat.RGB24:
                 encodingStr = "rgb8";
-                step=(uint)image.width * 3;
+                step = (uint)image.width * 3;
                 break;
             case TextureFormat.R16:
                 encodingStr = "mono16";
-                step=(uint)image.width * 2;
+                step = (uint)image.width * 2;
                 break;
             default:
                 Debug.LogError($"Texture format {format} unsupported!");
