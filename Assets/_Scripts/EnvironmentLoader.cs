@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using DevLocker.Utils;
 using RobotAtVirtualHome;
 using RosMessageTypes.Std;
@@ -8,30 +9,42 @@ using UnityEngine.SceneManagement;
 public class EnvironmentLoader : MonoBehaviour
 {
     [SerializeField] string commandTopic = "/load_environment";
-    [SerializeField] SceneReference scene;
+    [SerializeField] SceneReference sceneRef;
     [SerializeField] SimulationOptions options;
 
     void Start()
     {
         var ros = ROSConnection.GetOrCreateInstance();
-        ros.Subscribe<Int32Msg>(commandTopic, OnCommandReceived);
+        ros.Subscribe<Int32Msg>(commandTopic, (msg) => OnCommandReceived(msg).Forget());
         Debug.Log($"Waiting to receive commands on {commandTopic}");
     }
 
-    void OnCommandReceived(Int32Msg msg)
+    async UniTaskVoid OnCommandReceived(Int32Msg msg)
     {
-        if(msg.data == 0)
+        if (msg.data == 0)
         {
-            SceneManager.UnloadSceneAsync(scene.ScenePath, UnloadSceneOptions.None);
+            await SceneManager.UnloadSceneAsync(sceneRef.ScenePath, UnloadSceneOptions.None);
             Debug.Log("Unloading Robot@VirtualHome scene");
         }
-        
+
         else
         {
-            options.houseSelected = msg.data;
-            Debug.Log($"Loading Robot@VirtualHome scene with environment {options.houseSelected}");
-            SceneManager.LoadScene(scene.ScenePath, LoadSceneMode.Additive);
+            Scene scene = SceneManager.GetSceneByPath(sceneRef.ScenePath);
+            if (scene.isLoaded)
+            {
+                Debug.Log("Unloading Robot@VirtualHome scene");
+                await SceneManager.UnloadSceneAsync(sceneRef.ScenePath, UnloadSceneOptions.None);
+            }
+
+            LoadEnvironment(msg.data);
         }
+    }
+
+    void LoadEnvironment(int id)
+    {
+        options.houseSelected = id;
+        Debug.Log($"Loading Robot@VirtualHome scene with environment {options.houseSelected}");
+        SceneManager.LoadScene(sceneRef.ScenePath, LoadSceneMode.Additive);
     }
 
 }

@@ -167,7 +167,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e45102472fdf5eefa6a6bb96f8dd364, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetFrameRate: 30
+  targetFrameRate: 60
 --- !u!114 &21572148
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,7 +181,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   commandTopic: /load_environment
-  scene:
+  sceneRef:
     m_SceneAsset: {fileID: 102900000, guid: 9d251de31c177c143a2a44fcb15ad65c, type: 3}
     m_IsDirty: 0
     m_ScenePath: Assets/RobotAtVirtualHome/Scenes/RobotAtVirtualHome.unity

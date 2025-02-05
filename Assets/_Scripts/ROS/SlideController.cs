@@ -45,6 +45,12 @@ public class SlideController : MonoBehaviour
         ros.RegisterPublisher<OdometryMsg>(odomTopic);
     }
 
+    void OnDestroy()
+    {
+        ros.Unsubscribe(cmd_velTopic);
+        ros.Unsubscribe(resetPoseTopic);
+    }
+
     void Update()
     {
         TwistMsg currentTwist = new TwistMsg(new Vector3Msg(0, 0, 0), new Vector3Msg(0, 0, 0));
