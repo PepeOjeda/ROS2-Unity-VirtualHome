@@ -14,8 +14,8 @@ using System;
 [RequireComponent(typeof(Camera))]
 public class RGBDCamera : MonoBehaviour
 {
-    public string colorTopic = "/rgbd/color/raw";
-    public string depthTopic = "/rgbd/depth/raw";
+    public string colorTopic = "/rgbd/color";
+    public string depthTopic = "/rgbd/depth";
     public string infoTopic = "/rgbd/info";
     public RenderTexture colorRT;
     public RenderTexture depthRT;
@@ -32,8 +32,13 @@ public class RGBDCamera : MonoBehaviour
     void Start()
     {
         ros = ROSConnection.GetOrCreateInstance();
-        ros.RegisterPublisher<ImageMsg>(colorTopic, 1);
-        ros.RegisterPublisher<ImageMsg>(depthTopic, 1);
+        
+        ros.RegisterPublisher<ImageMsg>(colorTopic+"/raw", 1);
+        ros.RegisterPublisher<ImageMsg>(depthTopic+"/raw", 1);
+
+        ros.RegisterPublisher<CompressedImageMsg>(colorTopic+"/compressed", 1);
+        ros.RegisterPublisher<CompressedImageMsg>(depthTopic+"/compressed", 1);
+
         ros.RegisterPublisher<CameraInfoMsg>(infoTopic, 1);
         countdown = new(1 / frequency);
         _camera = GetComponent<Camera>();
@@ -67,9 +72,12 @@ public class RGBDCamera : MonoBehaviour
     {
         //vertical flip on gpu
         Graphics.Blit(src, colorRT, new Vector2(1, -1), new Vector2(0, 1));
-        //Graphics.Blit(src, colorRT, new Vector2(1, 1), new Vector2(0, 0));
-        ImageMsg msg = ReadImage(header, colorRT, TextureFormat.RGB24, ref colorImage);
-        ros.Publish(colorTopic, msg);
+
+        // ImageMsg msg = BuildRawMessage(header, colorRT, TextureFormat.RGB24, ref colorImage);
+        // ros.Publish(colorTopic+"/raw", msg);
+
+        CompressedImageMsg msg = BuildCompressedMsg(header, colorRT, TextureFormat.RGB24, ref colorImage);
+        ros.Publish(colorTopic+"/compressed", msg);
     }
 
     void publishDepth(RenderTexture src, Header header)
@@ -77,11 +85,14 @@ public class RGBDCamera : MonoBehaviour
         //read depth buffer (material also does the vertical flip)
         Graphics.Blit(src, depthRT, depthMat, 0); // the pass index is required! otherwise nothing happens
 
-        ImageMsg msg = ReadImage(header, depthRT, TextureFormat.R16, ref depthImage);
-        ros.Publish(depthTopic, msg);
+        // ImageMsg msg = BuildRawMessage(header, depthRT, TextureFormat.R16, ref depthImage);
+        // ros.Publish(depthTopic+"/raw", msg);
+
+        CompressedImageMsg msg = BuildCompressedMsg(header, depthRT, TextureFormat.R16, ref depthImage);
+        ros.Publish(depthTopic+"/compressed", msg);
     }
 
-    ImageMsg ReadImage(Header header, RenderTexture renderTexture, TextureFormat format, ref Texture2D image)
+    ImageMsg BuildRawMessage(Header header, RenderTexture renderTexture, TextureFormat format, ref Texture2D image)
     {
         //read render texture (gpu) to Texture2D (cpu)  
         RenderTexture.active = renderTexture;
@@ -91,10 +102,6 @@ public class RGBDCamera : MonoBehaviour
         image.Apply();
         RenderTexture.active = null;
 
-        //compressed
-        //ImageMsg msg = new(header,
-        //	"png",
-        //	image.EncodeToPNG());
 
         string encodingStr = "";
         uint step = 0;
@@ -113,13 +120,31 @@ public class RGBDCamera : MonoBehaviour
                 throw new Exception();
         }
 
-        //raw
         ImageMsg msg = new(header,
             (uint)image.height, (uint)image.width, encodingStr, (byte)0, step,
             image.GetRawTextureData().ToArray());
 
+
         return msg;
     }
+
+    CompressedImageMsg BuildCompressedMsg(Header header, RenderTexture renderTexture, TextureFormat format, ref Texture2D image)
+    {
+        //read render texture (gpu) to Texture2D (cpu)  
+        RenderTexture.active = renderTexture;
+        if (!image)
+            image = new Texture2D(renderTexture.width, renderTexture.height, format, false);
+        image.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+        image.Apply();
+        RenderTexture.active = null;
+
+        CompressedImageMsg msg = new(header,
+        	"png",
+        	image.EncodeToPNG());
+
+        return msg;
+    }
+
     void FlipVerticallyCPU(Texture2D image)
     {
         Color[] pixels = image.GetPixels();
