@@ -2094,7 +2094,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcdb4d9647cba53eeb297e85123c187c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localizationTopic: /giraff/ground_truth
+  localizationTopic: /giraff/pose
   odomTopic: /giraff/odom
   cmd_velTopic: /giraff/cmd_vel
   resetPoseTopic: /giraff/resetPose

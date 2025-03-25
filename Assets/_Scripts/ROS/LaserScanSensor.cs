@@ -147,11 +147,11 @@ public class LaserScanSensor : MonoBehaviour
             var yawSensorDegrees = Mathf.Lerp(m_CurrentScanAngleStart, m_CurrentScanAngleEnd, t);
             var yawDegrees = yawBaseDegrees + yawSensorDegrees;
             var directionVector = Quaternion.Euler(0f, yawDegrees, 0f) * Vector3.forward;
-            var measurementStart = RangeMetersMin * directionVector + transform.position;
+            var measurementStart = transform.position;
             var measurementRay = new Ray(measurementStart, directionVector);
             var foundValidMeasurement = Physics.Raycast(measurementRay, out var hit, RangeMetersMax);
             // Only record measurement if it's within the sensor's operating range
-            if (foundValidMeasurement)
+            if (foundValidMeasurement && hit.distance >= RangeMetersMin)
             {
                 ranges.Add(hit.distance);
             }

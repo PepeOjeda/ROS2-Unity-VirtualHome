@@ -10,7 +10,7 @@ using Unity.Robotics.ROSTCPConnector.ROSGeometry;
 
 public class SlideController : MonoBehaviour
 {
-    public string localizationTopic = "/giraff/groundTruth";
+    public string localizationTopic = "/giraff/pose";
     public string odomTopic = "/giraff/odom";
     public string cmd_velTopic = "/giraff/cmd_vel";
     public string resetPoseTopic = "/giraff/resetPose";
