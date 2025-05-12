@@ -21,12 +21,16 @@ public class EnvironmentLoader : MonoBehaviour
 
     async UniTaskVoid OnCommandReceived(Int32Msg msg)
     {
+        Debug.Log("Received load msg");
+        var ros = ROSConnection.GetOrCreateInstance();
+        ros.Disconnect();
+
         if (msg.data == 0)
         {
             await SceneManager.UnloadSceneAsync(sceneRef.ScenePath, UnloadSceneOptions.None);
             Debug.Log("Unloading Robot@VirtualHome scene");
+            ros.Connect();
         }
-
         else
         {
             Scene scene = SceneManager.GetSceneByPath(sceneRef.ScenePath);
@@ -36,6 +40,7 @@ public class EnvironmentLoader : MonoBehaviour
                 await SceneManager.UnloadSceneAsync(sceneRef.ScenePath, UnloadSceneOptions.None);
             }
 
+            ros.Connect();
             LoadEnvironment(msg.data);
         }
     }

@@ -1568,7 +1568,7 @@ MonoBehaviour:
   colorRT: {fileID: 8600000, guid: 58e4246d6e1fcae95b33d788d53251a1, type: 2}
   depthRT: {fileID: 8600000, guid: fdef209c099ffbee78ec33b8c2a757c2, type: 2}
   depthMat: {fileID: 2100000, guid: 870c16cc2d9067b87968fd9c7ce214d7, type: 2}
-  frequency: 30
+  frequency: 10
 --- !u!1 &3190970285509838273
 GameObject:
   m_ObjectHideFlags: 0
