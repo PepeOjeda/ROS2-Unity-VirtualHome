@@ -29,10 +29,8 @@ MonoBehaviour:
     materials:
     - {fileID: 2100000, guid: f00b33b6b91f057429b09ca6cc7abc05, type: 2}
   FloorsMaterialsByRoomType: []
+  fixAllSeeds: 1
   specifySeedByObjectType: []
   userPrefab: {fileID: 0}
-  agentsToInstantiate:
-  - name: giraff
-    ip: localhost
-    prefab: {fileID: 5002478105795529657, guid: 8bbd2da57322a482cb6e8d55a52e19b1, type: 3}
+  agentsToInstantiate: []
   simulationLog: {fileID: 0}

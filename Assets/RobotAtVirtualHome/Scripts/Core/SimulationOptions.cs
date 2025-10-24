@@ -34,6 +34,9 @@ namespace RobotAtVirtualHome
         public List<PairForMaterials> FloorsMaterialsByRoomType;
 
         [SerializeField]
+        public bool fixAllSeeds = false;
+
+        [SerializeField]
         [Tooltip("Choose an object model according to the object type. Use the <= 0 to choose it randomly.")]
         public List<PairForSeed> specifySeedByObjectType;
 
