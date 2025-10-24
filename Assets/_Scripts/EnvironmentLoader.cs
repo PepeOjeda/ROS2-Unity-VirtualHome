@@ -11,6 +11,9 @@ public class EnvironmentLoader : MonoBehaviour
     [SerializeField] string commandTopic = "/load_environment";
     [SerializeField] SceneReference sceneRef;
     [SerializeField] SimulationOptions options;
+    [SerializeField] GameObject robotPrefab;
+
+    GameObject robotInstance;
 
     void Start()
     {
@@ -27,29 +30,33 @@ public class EnvironmentLoader : MonoBehaviour
 
         if (msg.data == 0)
         {
-            await SceneManager.UnloadSceneAsync(sceneRef.ScenePath, UnloadSceneOptions.None);
-            Debug.Log("Unloading Robot@VirtualHome scene");
+            await Unload();
             ros.Connect();
         }
         else
         {
             Scene scene = SceneManager.GetSceneByPath(sceneRef.ScenePath);
             if (scene.isLoaded)
-            {
-                Debug.Log("Unloading Robot@VirtualHome scene");
-                await SceneManager.UnloadSceneAsync(sceneRef.ScenePath, UnloadSceneOptions.None);
-            }
+                await Unload();
 
             ros.Connect();
             LoadEnvironment(msg.data);
         }
     }
 
-    void LoadEnvironment(int id)
+    async void LoadEnvironment(int id)
     {
         options.houseSelected = id;
         Debug.Log($"Loading Robot@VirtualHome scene with environment {options.houseSelected}");
-        SceneManager.LoadScene(sceneRef.ScenePath, LoadSceneMode.Additive);
+        await SceneManager.LoadSceneAsync(sceneRef.ScenePath, LoadSceneMode.Additive);
+        if(!robotInstance)
+            robotInstance = Instantiate(robotPrefab);
     }
+    
 
+    async UniTask Unload()
+    {
+        await SceneManager.UnloadSceneAsync(sceneRef.ScenePath, UnloadSceneOptions.None);
+        Debug.Log("Unloading Robot@VirtualHome scene");
+    }
 }

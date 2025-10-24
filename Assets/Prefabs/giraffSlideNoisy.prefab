@@ -858,6 +858,7 @@ MonoBehaviour:
   AngularResolutionDegrees: 1
   FrequencyHz: 10
   FrameId: hokuyo_front
+  noiseMu: -0.1
   noiseSigma: 0.025
 --- !u!1 &1980044902711992590
 GameObject:
@@ -1720,7 +1721,7 @@ GameObject:
   - component: {fileID: 1181447966330505503}
   - component: {fileID: 7711163305533684022}
   - component: {fileID: 7467894798508600710}
-  - component: {fileID: 819961040693984752}
+  - component: {fileID: 9207217165798367226}
   m_Layer: 3
   m_Name: giraff_base_link
   m_TagString: Untagged
@@ -1789,7 +1790,7 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 2
---- !u!114 &819961040693984752
+--- !u!114 &9207217165798367226
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1798,7 +1799,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3682383415847327298}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dcdb4d9647cba53eeb297e85123c187c, type: 3}
+  m_Script: {fileID: 11500000, guid: f9adb5c6254d1b3b99952dad0cfa5bc7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   localizationTopic: /giraff/pose
@@ -1810,9 +1811,11 @@ MonoBehaviour:
   base_frame: giraff_base_link
   robot_base_rb: {fileID: 7467894798508600710}
   movementNoise:
-    sigmaForward: 0.1
-    sigmaSide: 0.1
-    sigmaAngle: 0.1
+    sigmaForward: 0.2
+    sigmaSide: 0.2
+    sigmaAngle: 0.2
+  acceleration: 0.2
+  angleAcceleration: 0.05
 --- !u!1 &3693597088064368751
 GameObject:
   m_ObjectHideFlags: 0
@@ -2049,7 +2052,7 @@ GameObject:
   - component: {fileID: 8604557415558634447}
   - component: {fileID: 1131421382999044282}
   m_Layer: 3
-  m_Name: giraffSlide
+  m_Name: giraffSlideNoisy
   m_TagString: robot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

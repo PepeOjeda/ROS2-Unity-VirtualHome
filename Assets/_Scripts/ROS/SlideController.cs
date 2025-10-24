@@ -7,6 +7,7 @@ using RosMessageTypes.Std;
 using Unity.Robotics.Core;
 using RosMessageTypes.Nav;
 using Unity.Robotics.ROSTCPConnector.ROSGeometry;
+using System;
 
 public class SlideController : MonoBehaviour
 {
@@ -18,16 +19,24 @@ public class SlideController : MonoBehaviour
     public string odom_frame = "giraff_odom";
     public string base_frame = "giraff_base_link";
 
-    [SerializeField] Rigidbody robot_base_rb;
-    struct CMD_vel
+    [SerializeField] protected Rigidbody robot_base_rb;
+    protected struct CMD_vel
     {
         public float timestamp;
         public TwistMsg msg;
     }
-    private CMD_vel lastMessage;
+    protected CMD_vel lastMessage;
 
-    ROSConnection ros;
-    double[] emptyCovariance = {
+    protected ROSConnection ros;
+    protected double[] emptyCovariance = {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0
+    };
+    protected double[] movementCovariance = {
         0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0,
@@ -43,6 +52,7 @@ public class SlideController : MonoBehaviour
         ros.Subscribe<PoseStampedMsg>(resetPoseTopic, ResetPose);
         ros.RegisterPublisher<PoseWithCovarianceStampedMsg>(localizationTopic);
         ros.RegisterPublisher<OdometryMsg>(odomTopic);
+        Setup();
     }
 
     void OnDestroy()
@@ -51,22 +61,20 @@ public class SlideController : MonoBehaviour
         ros.Unsubscribe(resetPoseTopic);
     }
 
+    void OnValidate()
+    {
+        Setup();
+    }
+
     void Update()
     {
-        TwistMsg currentTwist = new TwistMsg(new Vector3Msg(0, 0, 0), new Vector3Msg(0, 0, 0));
-
-        if (lastMessage.msg != null && Time.time - lastMessage.timestamp < ROSTimeout)
-            currentTwist = lastMessage.msg;
+        Vector3 previousPosition = transform.position;
+        Quaternion previousRotation = transform.rotation;
 
         //apply Twist
-        {
-            Vector3 linear = currentTwist.linear.From<FLU>();
-            Vector3 angular = -currentTwist.angular.From<FLU>();
-            robot_base_rb.MovePosition(robot_base_rb.transform.position + robot_base_rb.transform.localToWorldMatrix.MultiplyVector(linear * Time.deltaTime));
-            robot_base_rb.MoveRotation(Quaternion.Euler(0, angular.y * Mathf.Rad2Deg * Time.deltaTime, 0) * robot_base_rb.transform.rotation);
-        }
+        TwistMsg twist = CalculateAndApplyMovement();
 
-        //Localization msg
+        //GT Localization msg
         {
             PoseWithCovarianceStampedMsg poseMsg = new();
             poseMsg.header = new(new TimeStamp(Clock.time), "map");
@@ -82,22 +90,50 @@ public class SlideController : MonoBehaviour
         }
 
         // Odom msg
-        {
-            OdometryMsg odometryMsg = new();
-            odometryMsg.header = new(new TimeStamp(Clock.time), odom_frame);
+        PublishOdometry(previousPosition, previousRotation, twist);
+    }
 
-            TFFrame odomFrame = TFSystem.instance.GetTransform(odometryMsg.header);
-            Vector3 odomPosition = odomFrame.InverseTransformPoint(robot_base_rb.transform.position);
-            Quaternion odomRotation = Quaternion.Inverse(odomFrame.rotation) * robot_base_rb.transform.rotation;
+    protected virtual TwistMsg CalculateAndApplyMovement()
+    {
+        TwistMsg currentTwist;
+        if (lastMessage.msg != null && Time.time - lastMessage.timestamp < ROSTimeout)
+            currentTwist = lastMessage.msg;
+        else
+            return new();
 
-            odometryMsg.pose = new(new PoseMsg(), emptyCovariance);
-            odometryMsg.pose.pose.position = odomPosition.To<FLU>();
-            odometryMsg.pose.pose.orientation = odomRotation.To<FLU>();
+        Vector3 linear = currentTwist.linear.From<FLU>();
+        Vector3 angular = -currentTwist.angular.From<FLU>();
 
-            odometryMsg.child_frame_id = base_frame;
-            odometryMsg.twist = new(currentTwist, emptyCovariance);
-            ros.Publish(odomTopic, odometryMsg);
-        }
+        robot_base_rb.MovePosition(robot_base_rb.transform.position + robot_base_rb.transform.localToWorldMatrix.MultiplyVector(linear * Time.deltaTime));
+        robot_base_rb.MoveRotation(Quaternion.Euler(0, angular.y * Mathf.Rad2Deg * Time.deltaTime, 0) * robot_base_rb.transform.rotation);
+
+        return currentTwist;
+    }
+
+    protected virtual void PublishOdometry(Vector3 previousPosition, Quaternion previousRotation, TwistMsg twist)
+    {
+        OdometryMsg odometryMsg = new();
+        odometryMsg.header = new(new TimeStamp(Clock.time), odom_frame);
+
+        TFFrame odomFrame = TFSystem.instance.GetTransform(odometryMsg.header);
+        Vector3 odomPosition = odomFrame.InverseTransformPoint(robot_base_rb.transform.position);
+        Quaternion odomRotation = Quaternion.Inverse(odomFrame.rotation) * robot_base_rb.transform.rotation;
+
+        odometryMsg.pose = new(new PoseMsg(), movementCovariance);
+        odometryMsg.pose.pose.position = odomPosition.To<FLU>();
+        odometryMsg.pose.pose.orientation = odomRotation.To<FLU>();
+
+        odometryMsg.child_frame_id = base_frame;
+
+        Vector3 positionDiff = transform.position - previousPosition;
+        Quaternion rotationDiff = Quaternion.Inverse(previousRotation) * transform.rotation;
+
+
+        odometryMsg.twist.covariance = movementCovariance;
+
+        odometryMsg.twist.twist.linear = (positionDiff / Time.deltaTime).To<FLU>();
+        odometryMsg.twist.twist.angular = (rotationDiff.eulerAngles / Time.deltaTime).To<FLU>();
+        ros.Publish(odomTopic, odometryMsg);
     }
 
 
@@ -108,7 +144,7 @@ public class SlideController : MonoBehaviour
     }
 
 
-    void ResetPose(PoseStampedMsg msg)
+    protected virtual void ResetPose(PoseStampedMsg msg)
     {
         Debug.Log($"Resetting to position: {msg.pose.position}");
         TFFrame msgFrame = TFSystem.instance.GetTransform(msg.header);
@@ -117,5 +153,9 @@ public class SlideController : MonoBehaviour
         Quaternion rotation = msgFrame.rotation * msg.pose.orientation.From(CoordinateSpaceSelection.FLU);
         robot_base_rb.Move(position, rotation);
         robot_base_rb.transform.SetPositionAndRotation(position, rotation);
+    }
+
+    protected virtual void Setup()
+    {
     }
 }

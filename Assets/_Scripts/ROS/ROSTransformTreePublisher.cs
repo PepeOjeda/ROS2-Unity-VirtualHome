@@ -13,14 +13,24 @@ using UnityEngine;
 public class ROSTransformTreePublisher : MonoBehaviour
 {
     const string k_TfTopic = "/tf";
-    
+
     [SerializeField]
     double m_PublishRateHz = 20f;
+
     [SerializeField]
-    List<string> m_GlobalFrameIds = new List<string> { "map", "odom" };
+    bool publishGlobalTFs = true;
+
+    [System.Serializable]
+    public struct GlobalTF
+    {
+        public string from, to;
+    }
+    
+    [SerializeField]
+    List<GlobalTF> m_GlobalFrameIds = new List<GlobalTF> { new() { from = "map", to = "odom" } };
     [SerializeField]
     GameObject m_RootGameObject;
-    
+
     double m_LastPublishTimeSeconds;
 
     TransformTreeNode m_TransformRoot;
@@ -64,29 +74,17 @@ public class ROSTransformTreePublisher : MonoBehaviour
     {
         var tfMessageList = new List<TransformStampedMsg>();
 
-        if (m_GlobalFrameIds.Count > 0)
-        {
-            var tfRootToGlobal = new TransformStampedMsg(
-                new HeaderMsg(new TimeStamp(Clock.time), m_GlobalFrameIds.Last()),
-                m_TransformRoot.name,
-                m_TransformRoot.Transform.To<FLU>());
-            tfMessageList.Add(tfRootToGlobal);
-        }
-        else
-        {
-            Debug.LogWarning($"No {m_GlobalFrameIds} specified, transform tree will be entirely local coordinates.");
-        }
-        
-        // In case there are multiple "global" transforms that are effectively the same coordinate frame, 
-        // treat this as an ordered list, first entry is the "true" global
-        for (var i = 1; i < m_GlobalFrameIds.Count; ++i)
-        {
-            var tfGlobalToGlobal = new TransformStampedMsg(
-                new HeaderMsg(new TimeStamp(Clock.time), m_GlobalFrameIds[i - 1]),
-                m_GlobalFrameIds[i],
-                // Initializes to identity transform
-                new TransformMsg());
-            tfMessageList.Add(tfGlobalToGlobal);
+        if (publishGlobalTFs)
+        {            
+            for (int i = 0; i < m_GlobalFrameIds.Count; ++i)
+            {
+                var tfGlobalToGlobal = new TransformStampedMsg(
+                    new HeaderMsg(new TimeStamp(Clock.time), m_GlobalFrameIds[i].from),
+                    m_GlobalFrameIds[i].to,
+                    // Initializes to identity transform
+                    new TransformMsg());
+                tfMessageList.Add(tfGlobalToGlobal);
+            }
         }
 
         PopulateTFList(tfMessageList, m_TransformRoot);

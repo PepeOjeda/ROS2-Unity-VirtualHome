@@ -17,67 +17,50 @@ public class LaserScanSensor : MonoBehaviour
     public float RangeMetersMax = 1000;
     public float ScanAngleStartDegrees = -45;
     public float ScanAngleEndDegrees = 45;
-    // Change the scan start and end by this amount after every publish
-    public float ScanOffsetAfterPublish = 0f;
-    public int NumMeasurementsPerScan = 10;
-    public float TimeBetweenMeasurementsSeconds = 0.01f;
-    public string LayerMaskName = "TurtleBot3Manual";
+    public float AngularResolutionDegrees = 1f;
+    public float FrequencyHz = 10f;
     public string FrameId = "base_scan";
+    public float noiseMu = 0;
+    public float noiseSigma = 0;
 
-    float m_CurrentScanAngleStart;
-    float m_CurrentScanAngleEnd;
     ROSConnection m_Ros;
-    double m_TimeNextScanSeconds = -1;
-    int m_NumMeasurementsTaken;
-    List<float> ranges = new List<float>();
+    float[] ranges;
 
-    bool isScanning = false;
-    double m_TimeLastScanBeganSeconds = -1;
+    double m_TimeLastScan = -1;
 
     protected virtual void Start()
     {
         m_Ros = ROSConnection.GetOrCreateInstance();
         m_Ros.RegisterPublisher<LaserScanMsg>(topic);
 
-        m_CurrentScanAngleStart = ScanAngleStartDegrees;
-        m_CurrentScanAngleEnd = ScanAngleEndDegrees;
+        //swap if needed
+        if (ScanAngleEndDegrees < ScanAngleStartDegrees)
+            (ScanAngleStartDegrees, ScanAngleEndDegrees) = (ScanAngleEndDegrees, ScanAngleStartDegrees);
 
-        m_TimeNextScanSeconds = Clock.Now + PublishPeriodSeconds;
+        ranges = new float[Mathf.RoundToInt((ScanAngleEndDegrees - ScanAngleStartDegrees) / AngularResolutionDegrees) + 1];
     }
 
-    void BeginScan()
+    public void Update()
     {
-        isScanning = true;
-        m_TimeLastScanBeganSeconds = Clock.Now;
-        m_TimeNextScanSeconds = m_TimeLastScanBeganSeconds + PublishPeriodSeconds;
-        m_NumMeasurementsTaken = 0;
-    }
+        if (Clock.NowTimeInSeconds - m_TimeLastScan < 1f / FrequencyHz)
+            return;
 
-    public void EndScan()
-    {
-        if (ranges.Count == 0)
+        var yawBaseDegrees = transform.rotation.eulerAngles.y;
+        for (int i = 0; i < ranges.Length; i++)
         {
-            Debug.LogWarning($"Took {m_NumMeasurementsTaken} measurements but found no valid ranges");
-        }
-        else if (ranges.Count != m_NumMeasurementsTaken || ranges.Count != NumMeasurementsPerScan)
-        {
-            Debug.LogWarning($"Expected {NumMeasurementsPerScan} measurements. Actually took {m_NumMeasurementsTaken}" +
-                             $"and recorded {ranges.Count} ranges.");
+            var yawDegrees = yawBaseDegrees + ScanAngleEndDegrees - i * AngularResolutionDegrees;
+            var directionVector = Quaternion.Euler(0f, yawDegrees, 0f) * Vector3.forward;
+            var measurementStart = transform.position;
+            var measurementRay = new Ray(measurementStart, directionVector);
+            var foundValidMeasurement = Physics.Raycast(measurementRay, out var hit, RangeMetersMax);
+            // Only record measurement if it's within the sensor's operating range
+            if (foundValidMeasurement && hit.distance >= RangeMetersMin)
+                ranges[i] = hit.distance + (float)MathUtils.RandGaussian(noiseMu, noiseSigma);
+            else
+                ranges[i] = float.MaxValue;
         }
 
         var timestamp = new TimeStamp(Clock.time);
-        // Invert the angle ranges when going from Unity to ROS
-        var angleStartRos = -m_CurrentScanAngleStart * Mathf.Deg2Rad;
-        var angleEndRos = -m_CurrentScanAngleEnd * Mathf.Deg2Rad;
-        if (angleStartRos > angleEndRos)
-        {
-            Debug.LogWarning("LaserScan was performed in a clockwise direction but ROS expects a counter-clockwise scan, flipping the ranges...");
-            var temp = angleEndRos;
-            angleEndRos = angleStartRos;
-            angleStartRos = temp;
-            ranges.Reverse();
-        }
-
         var msg = new LaserScanMsg
         {
             header = new HeaderMsg
@@ -91,87 +74,17 @@ public class LaserScanSensor : MonoBehaviour
             },
             range_min = RangeMetersMin,
             range_max = RangeMetersMax,
-            angle_min = angleStartRos,
-            angle_max = angleEndRos,
-            angle_increment = (angleEndRos - angleStartRos) / NumMeasurementsPerScan,
-            time_increment = TimeBetweenMeasurementsSeconds,
+            angle_min = ScanAngleStartDegrees * Mathf.Deg2Rad,
+            angle_max = ScanAngleEndDegrees * Mathf.Deg2Rad,
+            angle_increment = AngularResolutionDegrees * Mathf.Deg2Rad,
+            time_increment = 0,
             scan_time = (float)PublishPeriodSeconds,
-            intensities = new float[ranges.Count],
-            ranges = ranges.ToArray(),
+            intensities = new float[ranges.Length],
+            ranges = ranges,
         };
-        
+
         m_Ros.Publish(topic, msg);
 
-        m_NumMeasurementsTaken = 0;
-        ranges.Clear();
-        isScanning = false;
-        var now = (float)Clock.time;
-        if (now > m_TimeNextScanSeconds)
-        {
-            Debug.LogWarning($"Failed to complete scan started at {m_TimeLastScanBeganSeconds:F} before next scan was " +
-                             $"scheduled to start: {m_TimeNextScanSeconds:F}, rescheduling to now ({now:F})");
-            m_TimeNextScanSeconds = now;
-        }
-
-        m_CurrentScanAngleStart += ScanOffsetAfterPublish;
-        m_CurrentScanAngleEnd += ScanOffsetAfterPublish;
-        if (m_CurrentScanAngleStart > 360f || m_CurrentScanAngleEnd > 360f)
-        {
-            m_CurrentScanAngleStart -= 360f;
-            m_CurrentScanAngleEnd -= 360f;
-        }
-    }
-
-    public void Update()
-    {
-        if (!isScanning)
-        {
-            if (Clock.NowTimeInSeconds < m_TimeNextScanSeconds)
-            {
-                return;
-            }
-
-            BeginScan();
-        }
-
-
-        var measurementsSoFar = TimeBetweenMeasurementsSeconds == 0 ? NumMeasurementsPerScan :
-            1 + Mathf.FloorToInt((float)(Clock.time - m_TimeLastScanBeganSeconds) / TimeBetweenMeasurementsSeconds);
-        if (measurementsSoFar > NumMeasurementsPerScan)
-            measurementsSoFar = NumMeasurementsPerScan;
-
-        var yawBaseDegrees = transform.rotation.eulerAngles.y;
-        while (m_NumMeasurementsTaken < measurementsSoFar)
-        {
-            var t = m_NumMeasurementsTaken / (float)NumMeasurementsPerScan;
-            var yawSensorDegrees = Mathf.Lerp(m_CurrentScanAngleStart, m_CurrentScanAngleEnd, t);
-            var yawDegrees = yawBaseDegrees + yawSensorDegrees;
-            var directionVector = Quaternion.Euler(0f, yawDegrees, 0f) * Vector3.forward;
-            var measurementStart = transform.position;
-            var measurementRay = new Ray(measurementStart, directionVector);
-            var foundValidMeasurement = Physics.Raycast(measurementRay, out var hit, RangeMetersMax);
-            // Only record measurement if it's within the sensor's operating range
-            if (foundValidMeasurement && hit.distance >= RangeMetersMin)
-            {
-                ranges.Add(hit.distance);
-            }
-            else
-            {
-                ranges.Add(float.MaxValue);
-            }
-
-            // Even if Raycast didn't find a valid hit, we still count it as a measurement
-            ++m_NumMeasurementsTaken;
-        }
-        
-        if (m_NumMeasurementsTaken >= NumMeasurementsPerScan)
-        {
-            if (m_NumMeasurementsTaken > NumMeasurementsPerScan)
-            {
-                Debug.LogError($"LaserScan has {m_NumMeasurementsTaken} measurements but we expected {NumMeasurementsPerScan}");
-            }
-            EndScan();
-        }
-
+        m_TimeLastScan = Clock.NowTimeInSeconds;
     }
 }

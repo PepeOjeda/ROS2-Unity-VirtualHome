@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 21572146}
   - component: {fileID: 21572147}
   - component: {fileID: 21572148}
+  - component: {fileID: 21572149}
   m_Layer: 0
   m_Name: SimulationSettings
   m_TagString: Untagged
@@ -186,6 +187,25 @@ MonoBehaviour:
     m_IsDirty: 0
     m_ScenePath: Assets/RobotAtVirtualHome/Scenes/RobotAtVirtualHome.unity
   options: {fileID: 11400000, guid: da101c6227f95f40399118dd82c6cce7, type: 2}
+  robotPrefab: {fileID: 5002478105795529657, guid: 8bbd2da57322a482cb6e8d55a52e19b1, type: 3}
+--- !u!114 &21572149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21572144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e68f65278fa404640beeb137ab878606, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PublishRateHz: 1
+  publishGlobalTFs: 0
+  m_GlobalFrameIds:
+  - from: map
+    to: odom
+  m_RootGameObject: {fileID: 0}
 --- !u!1 &21787878
 GameObject:
   m_ObjectHideFlags: 0
