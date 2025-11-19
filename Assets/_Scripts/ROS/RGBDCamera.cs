@@ -22,6 +22,9 @@ public class RGBDCamera : MonoBehaviour
     public Material depthMat;
     public float frequency = 30;
 
+    public bool publishRawImages = false;
+    public bool publishCompressedImages = true;
+
     CustomTimers.Countdown countdown;
 
     private ROSConnection ros;
@@ -32,17 +35,16 @@ public class RGBDCamera : MonoBehaviour
     void Start()
     {
         ros = ROSConnection.GetOrCreateInstance();
-        
-        ros.RegisterPublisher<ImageMsg>(colorTopic+"/raw", 1);
-        ros.RegisterPublisher<ImageMsg>(depthTopic+"/raw", 1);
 
-        ros.RegisterPublisher<CompressedImageMsg>(colorTopic+"/compressed", 1);
-        ros.RegisterPublisher<CompressedImageMsg>(depthTopic+"/compressed", 1);
+        ros.RegisterPublisher<ImageMsg>(colorTopic + "/raw", 1);
+        ros.RegisterPublisher<ImageMsg>(depthTopic + "/raw", 1);
+
+        ros.RegisterPublisher<CompressedImageMsg>(colorTopic + "/compressed", 1);
+        ros.RegisterPublisher<CompressedImageMsg>(depthTopic + "/compressed", 1);
 
         ros.RegisterPublisher<CameraInfoMsg>(infoTopic, 1);
         countdown = new(1 / frequency);
         _camera = GetComponent<Camera>();
-
     }
 
     void OnRenderImage(RenderTexture src, RenderTexture dest)
@@ -53,6 +55,9 @@ public class RGBDCamera : MonoBehaviour
         if (_camera.activeTexture.width != colorRT.width || _camera.activeTexture.height != colorRT.height)
             Debug.LogWarning("The resolutions of the camera target and custom render texture don't match!");
 
+        if(!publishRawImages && !publishCompressedImages)
+            Debug.LogWarning("Camera is configured to not publish either raw OR compressed images! You probably want to enable at least one of them");
+            
         Header header = new(new TimeStamp(Clock.time), gameObject.name);
         publishInfo(header);
         publishColor(src, header);
@@ -72,24 +77,33 @@ public class RGBDCamera : MonoBehaviour
     {
         //vertical flip on gpu
         Graphics.Blit(src, colorRT, new Vector2(1, -1), new Vector2(0, 1));
+        if (publishRawImages)
+        {
+            ImageMsg msg = BuildRawMessage(header, colorRT, TextureFormat.RGB24, ref colorImage);
+            ros.Publish(colorTopic + "/raw", msg);
+        }
 
-        // ImageMsg msg = BuildRawMessage(header, colorRT, TextureFormat.RGB24, ref colorImage);
-        // ros.Publish(colorTopic+"/raw", msg);
-
-        CompressedImageMsg msg = BuildCompressedMsg(header, colorRT, TextureFormat.RGB24, ref colorImage);
-        ros.Publish(colorTopic+"/compressed", msg);
+        if (publishCompressedImages)
+        {
+            CompressedImageMsg compressedMsg = BuildCompressedMsg(header, colorRT, TextureFormat.RGB24, ref colorImage);
+            ros.Publish(colorTopic + "/compressed", compressedMsg);
+        }
     }
 
     void publishDepth(RenderTexture src, Header header)
     {
         //read depth buffer (material also does the vertical flip)
         Graphics.Blit(src, depthRT, depthMat, 0); // the pass index is required! otherwise nothing happens
-
-        // ImageMsg msg = BuildRawMessage(header, depthRT, TextureFormat.R16, ref depthImage);
-        // ros.Publish(depthTopic+"/raw", msg);
-
-        CompressedImageMsg msg = BuildCompressedMsg(header, depthRT, TextureFormat.R16, ref depthImage);
-        ros.Publish(depthTopic+"/compressed", msg);
+        if (publishRawImages)
+        {
+            ImageMsg msg = BuildRawMessage(header, depthRT, TextureFormat.R16, ref depthImage);
+            ros.Publish(depthTopic + "/raw", msg);
+        }
+        if (publishCompressedImages)
+        {
+            CompressedImageMsg compressedMsg = BuildCompressedMsg(header, depthRT, TextureFormat.R16, ref depthImage);
+            ros.Publish(depthTopic + "/compressed", compressedMsg);
+        }
     }
 
     ImageMsg BuildRawMessage(Header header, RenderTexture renderTexture, TextureFormat format, ref Texture2D image)
@@ -139,8 +153,8 @@ public class RGBDCamera : MonoBehaviour
         RenderTexture.active = null;
 
         CompressedImageMsg msg = new(header,
-        	"png",
-        	image.EncodeToPNG());
+            "png",
+            image.EncodeToPNG());
 
         return msg;
     }
